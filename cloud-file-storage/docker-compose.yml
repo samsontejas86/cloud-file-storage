@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  cloud-file-storage-app:
+    image: krios2146/cloud-file-storage
+    ports:
+      - "8082:8080"
+    environment:
+      - SPRING_DB_USER=spring
+      - SPRING_DB_PASSWORD=P6L9et0LwruZiTFe0aF0RuG5GUv
+      - SPRING_DB_URL=jdbc:postgresql://database:5432/cloud-file-storage
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - MINIO_CLIENT_ENDPOINT=http://minio:9000
+      - MINIO_CLIENT_USER=root
+      - MINIO_CLIENT_PASSWORD=qa5ubrazi8r4m8zesp_crLj2b7sodl
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+  
+  database:
+    image: postgres:latest
+    volumes:
+      - ~/data/postgres:/var/lib/postgresql/data/
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=cloud-file-storage
+      - POSTGRES_USER=spring
+      - POSTGRES_PASSWORD=P6L9et0LwruZiTFe0aF0RuG5GUv
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    command: redis-server
+    volumes:
+      - ~/data/redis:/var/lib/redis
+      - ~/data/redis/config:/usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli ping | grep PONG" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9001"
+    volumes:
+      - ~/data/minio:/data
+    environment:
+      - MINIO_ROOT_USER=root
+      - MINIO_ROOT_PASSWORD=qa5ubrazi8r4m8zesp_crLj2b7sodl
+    ports:
+      - "9000:9000"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://78.153.130.215:9000/minio/health/live" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5

@@ -1,0 +1,24 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light" th:fragment="header">
+    <div class="container">
+        <div class="d-flex">
+            <a class="navbar-brand" th:href="@{/}">
+                <img alt="Cloud File Storage Logo" height="26" loading="lazy" th:src="@{/img/logo.png}"/>
+            </a>
+            <a class="navbar-brand" th:href="@{/}">Cloud File Storage</a>
+        </div>
+
+        <button aria-controls="navbarButtonsExample" aria-expanded="false" aria-label="Toggle navigation"
+                class="navbar-toggler" data-mdb-target="#navbarButtonsExample" data-mdb-toggle="collapse" type="button">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <div class="d-flex align-items-center" sec:authorize="!isAuthenticated()">
+            <a class="btn btn-secondary me-3" role="button" th:href="@{/login}">Login</a>
+            <a class="btn btn-primary" role="button" th:href="@{/registration}">Register</a>
+        </div>
+        <div class="d-flex align-items-center" sec:authorize="isAuthenticated()">
+            <div sec:authentication="name"></div>
+            <a class="btn btn-secondary ms-3" role="button" th:href="@{/logout}">Logout</a>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  database:
+    image: postgres:latest
+    volumes:
+      - ~/data/postgres:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=cloud-file-storage
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+  
+  redis:
+    image: redis:latest
+    command: redis-server
+    volumes:
+      - ~/data/redis:/var/lib/redis
+      - ~/data/redis/config:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9001"
+    volumes:
+      - ~/data/minio:/data
+    environment:
+      - MINIO_ROOT_USER=root
+      - MINIO_ROOT_PASSWORD=rootpassword
+    ports:
+      - "9000:9000"
+      - "9001:9001"

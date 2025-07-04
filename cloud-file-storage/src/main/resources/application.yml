@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    username: ${SPRING_DB_USER}
+    password: ${SPRING_DB_PASSWORD}
+    url: ${SPRING_DB_URL}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: "org.hibernate.dialect.PostgreSQLDialect"
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST}
+      port: ${SPRING_REDIS_PORT}
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+  mvc:
+    hiddenmethod:
+      filter:
+        enabled: true
+
+minio:
+  client:
+    endpoint: ${MINIO_CLIENT_ENDPOINT}
+    user: ${MINIO_CLIENT_USER}
+    password: ${MINIO_CLIENT_PASSWORD}
+  bucket-name: user-files

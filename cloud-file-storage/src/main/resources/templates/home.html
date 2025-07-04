@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Home</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.1/mdb.min.css" rel="stylesheet"/>
+</head>
+
+<body class="bg-secondary" style="--mdb-bg-opacity: 0.2;">
+
+<div th:replace="component/header :: header"></div>
+
+<div class="container-fluid mt-4" style="min-height: 50vh;">
+    <div class="row h-100">
+        <!-- Left Pane -->
+        <div class="col-md-2 d-flex justify-content-center align-items-start">
+
+            <div aria-label="upload button group" class="btn-group-vertical" role="group">
+                <button class="btn btn-primary mb-1" data-mdb-target="#fileUploadModal" data-mdb-toggle="modal"
+                        type="button">
+                    Upload file
+                </button>
+                <button class="btn btn-primary" data-mdb-target="#folderUploadModal" data-mdb-toggle="modal"
+                        type="button">
+                    Upload folder
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Right Pane -->
+        <div class="col-md-9">
+
+            <!-- Outer container -->
+            <div class="container-fluid d-flex flex-column">
+
+                <!-- Search -->
+                <form class="input-group mb-3" style="width: 33%;" th:action="@{/search}" th:method="get">
+                    <div class="form-outline">
+                        <input class="form-control bg-light" id="searchInput" required th:name="query"
+                               type="search"/>
+                        <label class="form-label" for="searchInput">Search</label>
+                    </div>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+
+                <!-- Badges -->
+                <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+                <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+
+                <!-- Inner container -->
+                <div class="container-fluid d-flex flex-column rounded-4 bg-light py-3 px-4"
+                     style="min-height: 50vh;">
+
+                    <!-- Breadcrumbs -->
+                    <nav aria-label="breadcrumb" class="mb-4" sec:authorize="isAuthenticated()">
+                        <ol class="breadcrumb fs-4">
+                            <li class="breadcrumb-item">
+                                <a th:class="${breadcrumbLinks == null ? 'breadcrumb-item active' : ''}"
+                                   th:href="@{/}">Storage</a>
+                            </li>
+                            <li class="breadcrumb-item" th:each="link, iterStat : ${breadcrumbLinks}"
+                                th:if="${!#strings.isEmpty(link)}">
+                                <a th:class="${iterStat.last ? 'breadcrumb-item active' : 'breadcrumb-item'}"
+                                   th:href="${'/?path=' + link}"
+                                   th:text="${breadcrumbFolders[iterStat.index]}"></a>
+                            </li>
+                        </ol>
+                    </nav>
+
+                    <!-- Not Authorized Message -->
+                    <div class="my-auto d-flex flex-column justify-content-center align-items-center"
+                         sec:authorize="!isAuthenticated()">
+                        <img class="w-25" th:src="@{/img/error.png}">
+                        <p class="lead">
+                            You are not logged in, please <a class="fw-normal" th:href="@{login}">login</a> to see
+                            your
+                            files.
+                        </p>
+                    </div>
+
+                    <!-- Folders -->
+                    <div th:if="${files}">
+                        <h6 class="mb-3">Folders</h6>
+                        <div class="row row-cols-1 row-cols-md-5 g-4">
+                            <div class="col" th:each="file, iterStat : ${files}" th:if="${file.isDir}">
+                                <div class="card flex-row p-2 align-items-center justify-content-between shadow-4-strong">
+
+                                    <!-- Folder Name -->
+                                    <div class="d-flex align-items-center w-75 position-relative">
+                                        <img alt="folder" style="width: 2rem" th:src="@{/img/folder.png}"/>
+                                        <span class="ms-2 d-block text-truncate" th:text="${file.name}"></span>
+                                        <a class="stretched-link" th:href="@{'/?path=' + ${file.path}}"></a>
+                                    </div>
+
+                                    <!-- Folder Actions -->
+                                    <div>
+                                        <div class="dropdown">
+                                            <button aria-expanded="false" class="bg-white"
+                                                    data-mdb-toggle="dropdown" id="folderDropdown"
+                                                    style="border: none; width: 2.5rem; :after" type="button">
+                                                <img class="w-50" th:src="@{/img/more.png}"/>
+                                            </button>
+
+                                            <ul aria-labelledby="folderDropdown" class="dropdown-menu">
+
+                                                <!-- Folder Rename -->
+                                                <li>
+                                                    <button class="dropdown-item"
+                                                            data-mdb-toggle="modal"
+                                                            th:attr="data-mdb-target=|#folder-rename-modal-${iterStat.index}|">
+                                                        Rename
+                                                    </button>
+                                                </li>
+
+                                                <!-- Folder Delete -->
+                                                <li>
+                                                    <form th:action="@{/folders}" th:method="delete"
+                                                          th:object="${folderDeleteRequest}">
+                                                        <input th:name="path" th:value="${file.path}" type="hidden">
+                                                        <input th:name="owner" th:value="${#authentication.name}"
+                                                               type="hidden">
+                                                        <button class="dropdown-item" type="submit">Delete</button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Folder Rename Modal -->
+                                <div th:replace="component/rename-folder-modal :: folder-modal"></div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Files -->
+                    <div class="mt-5" th:if="${files}">
+                        <h6 class="mb-3">Files</h6>
+                        <div class="row row-cols-1 row-cols-md-5 g-4">
+                            <div class="col" th:each="file, iterStat : ${files}" th:unless="${file.isDir}">
+                                <div class="card flex-row p-2 align-items-center justify-content-between shadow-4-strong">
+
+                                    <!-- File Name -->
+                                    <div class="d-flex align-items-center w-75 position-relative">
+                                        <img alt="file" style="width: 2rem" th:src="@{/img/file.png}"/>
+                                        <span class="ms-2 d-block text-truncate" th:text="${file.name}"></span>
+
+                                        <!-- File Download -->
+                                        <form th:action="@{/files}" th:method="get"
+                                              th:object="${fileDownloadRequest}">
+                                            <input th:name="path" th:value="${file.path}" type="hidden">
+                                            <input th:name="owner" th:value="${#authentication.name}" type="hidden">
+                                            <input th:name="name" th:value="${file.name}" type="hidden">
+                                            <button class="stretched-link" style="border: none"
+                                                    type="submit"></button>
+                                        </form>
+                                    </div>
+
+                                    <!-- File Actions -->
+                                    <div>
+                                        <div class="dropdown">
+                                            <button aria-expanded="false" class="bg-white"
+                                                    data-mdb-toggle="dropdown" id="fileDropdown"
+                                                    style="border: none; width: 2.5rem; :after" type="button">
+                                                <img class="w-50" th:src="@{/img/more.png}"/>
+                                            </button>
+
+                                            <ul aria-labelledby="fileDropdown" class="dropdown-menu">
+
+                                                <!-- File Rename -->
+                                                <li>
+                                                    <button class="dropdown-item"
+                                                            data-mdb-toggle="modal"
+                                                            th:attr="data-mdb-target=|#file-rename-modal-${iterStat.index}|">
+                                                        Rename
+                                                    </button>
+                                                </li>
+
+                                                <!-- File Delete -->
+                                                <li>
+                                                    <form th:action="@{/files}" th:method="delete"
+                                                          th:object="${fileDeleteRequest}">
+                                                        <input th:name="path" th:value="${file.path}" type="hidden">
+                                                        <input th:name="owner" th:value="${#authentication.name}"
+                                                               type="hidden">
+                                                        <button class="dropdown-item" type="submit">Delete</button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- File Rename Modal -->
+                                <div th:replace="component/rename-file-modal :: file-modal"></div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Upload Modal -->
+<div th:replace="component/upload-file-modal :: file-modal"></div>
+
+<!-- Folder Upload Modal -->
+<div th:replace="component/upload-folder-modal :: folder-modal"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.1/mdb.min.js" type="text/javascript"></script>
+<script crossorigin="anonymous" integrity="sha256-tG5mcZUtJsZvyKAxYLVXrmjKBVLd6VpVccqz/r4ypFE="
+        src="https://code.jquery.com/jquery-3.7.0.slim.min.js"></script>
+</body>
+
+</html>
